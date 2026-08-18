@@ -1,11 +1,260 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anime Quiz Master | Desafie seu Conhecimento Otaku</title>
+  <meta name="description" content="O quiz de anime mais completo e dinâmico. Trivia com API em tempo real, modo citações, desafios com tempo e estatísticas detalhadas." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    
+  <!-- Efeito de fundo ambiente -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-container">
+    <!-- Barra Superior -->
+    <header class="top-nav">
+      <div class="brand">
+        <span class="brand-badge">ANIME // QUIZ</span>
+        <h1 class="brand-title">MASTER <span>v2.0</span></h1>
+      </div>
+      <div class="nav-actions">
+        <button id="soundToggleBtn" class="icon-btn" title="Alternar Som" aria-label="Alternar Som">
+          <span id="soundIcon">🔊</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- TELA 1: HOME / CONFIGURAÇÃO -->
+    <section id="screenHome" class="screen active">
+      <div class="hero-card">
+        <div class="hero-tag">🔥 Teste suas habilidades</div>
+        <h2 class="hero-title">Qual é o seu nível de conhecimento Otaku?</h2>
+        <p class="hero-desc">
+          Perguntas dinâmicas via API, citações épicas de personagens e desafios contra o relógio. Escolha o seu modo de jogo e entre na arena!
+        </p>
+
+        <!-- Seletor de Modo de Jogo -->
+        <div class="setup-section">
+          <label class="section-label">1. Escolha o Modo de Jogo</label>
+          <div class="mode-grid">
+            <div class="mode-card active" data-mode="trivia_api">
+              <div class="mode-icon">🌐</div>
+              <div class="mode-info">
+                <h3>Trivia Global (API)</h3>
+                <p>Perguntas em tempo real da Open Trivia DB (Anime & Mangá)</p>
+              </div>
+            </div>
+
+            <div class="mode-card" data-mode="ptbr_curated">
+              <div class="mode-icon">🇧🇷</div>
+              <div class="mode-info">
+                <h3>Desafio Brasil (PT-BR)</h3>
+                <p>Perguntas clássicas e populares 100% em Português</p>
+              </div>
+            </div>
+
+            <div class="mode-card" data-mode="quotes">
+              <div class="mode-icon">💬</div>
+              <div class="mode-info">
+                <h3>Quem disse a frase?</h3>
+                <p>Adivinhe qual personagem ou anime é o dono da citação</p>
+              </div>
+            </div>
+
+            <div class="mode-card" data-mode="time_attack">
+              <div class="mode-icon">⚡</div>
+              <div class="mode-info">
+                <h3>Time Attack (60s)</h3>
+                <p>Corra contra o relógio com bônus por acertos consecutivos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seletor de Dificuldade e Quantidade -->
+        <div id="standardOptions" class="setup-grid">
+          <div class="setup-section">
+            <label class="section-label">2. Dificuldade</label>
+            <div class="segmented-control" id="difficultyGroup">
+              <button class="segment-btn active" data-diff="any">Todas</button>
+              <button class="segment-btn" data-diff="easy">Fácil</button>
+              <button class="segment-btn" data-diff="medium">Médio</button>
+              <button class="segment-btn" data-diff="hard">Difícil</button>
+            </div>
+          </div>
+
+          <div class="setup-section">
+            <label class="section-label">3. Quantidade de Perguntas</label>
+            <div class="segmented-control" id="amountGroup">
+              <button class="segment-btn active" data-amount="5">5</button>
+              <button class="segment-btn" data-amount="10">10</button>
+              <button class="segment-btn" data-amount="15">15</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botão Iniciar -->
+        <button id="startQuizBtn" class="cta-btn">
+          <span>INICIAR DESAFIO</span>
+          <span class="btn-arrow">➔</span>
+        </button>
+
+        <!-- Recordes Rápidos -->
+        <div class="home-stats-preview">
+          <div class="stat-pill">
+            <span class="stat-pill-label">Melhor Pontuação:</span>
+            <strong id="homeHighScore">0 pts</strong>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-label">Maior Combo:</span>
+            <strong id="homeMaxStreak">0x 🔥</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 2: LOADING -->
+    <section id="screenLoading" class="screen">
+      <div class="loading-container">
+        <div class="anime-spinner">
+          <div class="spinner-ring"></div>
+          <div class="spinner-core">⚡</div>
+        </div>
+        <h3 id="loadingText" class="loading-title">Invocando dados da API...</h3>
+        <p class="loading-subtitle">Carregando perguntas e preparando a arena</p>
+      </div>
+    </section>
+
+    <!-- TELA 3: QUIZ EM ANDAMENTO -->
+    <section id="screenQuiz" class="screen">
+      <!-- HUD do Quiz -->
+      <div class="quiz-hud">
+        <div class="hud-top">
+          <div class="hud-badges">
+            <span id="quizBadgeCategory" class="badge badge-accent">Anime & Mangá</span>
+            <span id="quizBadgeDiff" class="badge badge-outline">Médio</span>
+            <span id="quizBadgeMode" class="badge badge-mode">Trivia</span>
+          </div>
+
+          <div class="hud-score-box">
+            <div class="score-display">
+              <span class="score-label">PONTUAÇÃO</span>
+              <span id="quizCurrentScore" class="score-val">0</span>
+            </div>
+            <div id="quizStreakContainer" class="streak-badge hidden">
+              <span id="quizStreakText">🔥 2x COMBO</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Progresso e Timer -->
+        <div class="progress-bar-container">
+          <div id="quizProgressBar" class="progress-bar-fill"></div>
+        </div>
+
+        <div class="hud-sub">
+          <span id="quizQuestionCount" class="counter-text">Pergunta 1 de 10</span>
+          <div class="timer-display" id="timerBox">
+            <span class="timer-icon">⏱️</span>
+            <span id="quizTimerText" class="timer-val">15s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card da Pergunta -->
+      <div class="question-wrapper">
+        <div class="question-card" id="questionCard">
+          <div id="quoteContext" class="quote-header hidden">
+            <span class="quote-badge">Citação Marcante</span>
+          </div>
+          
+          <h2 id="questionText" class="question-text">
+            Carregando pergunta...
+          </h2>
+
+          <div id="optionsGrid" class="options-grid">
+            <!-- Opções injetadas via JavaScript -->
+          </div>
+        </div>
+
+        <!-- Feedback e Botão de Avanço -->
+        <div id="quizFooterFeedback" class="quiz-footer hidden">
+          <div id="feedbackMessage" class="feedback-msg"></div>
+          <button id="nextQuestionBtn" class="action-btn">
+            <span>PRÓXIMA PERGUNTA</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 4: RESULTADOS -->
+    <section id="screenResults" class="screen">
+      <div class="results-card">
+        <div class="results-header">
+          <div id="rankTrophy" class="rank-trophy">🏆</div>
+          <div class="rank-title-group">
+            <span class="results-tag">DESAFIO CONCLUÍDO</span>
+            <h2 id="rankTitle" class="rank-title">Mestre Otaku (Rank S)</h2>
+            <p id="rankFeedback" class="rank-feedback">Incrível! Seu conhecimento sobre o mundo dos animes é lendário!</p>
+          </div>
+        </div>
+
+        <!-- Grid de Estatísticas -->
+        <div class="results-metrics">
+          <div class="metric-box">
+            <span class="metric-label">Pontuação Total</span>
+            <span id="resultFinalScore" class="metric-val highlight">0</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Acertos</span>
+            <span id="resultAccuracyCount" class="metric-val">0 / 0</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Precisão</span>
+            <span id="resultAccuracyPercent" class="metric-val">0%</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Maior Combo</span>
+            <span id="resultMaxStreak" class="metric-val accent">0x 🔥</span>
+          </div>
+        </div>
+
+        <!-- Revisão de Respostas -->
+        <div class="review-section">
+          <button id="toggleReviewBtn" class="review-toggle-btn">
+            <span>📝 Ver Revisão das Respostas</span>
+            <span id="reviewArrow">▼</span>
+          </button>
+          <div id="reviewList" class="review-list hidden">
+            <!-- Itens de revisão gerados via JS -->
+          </div>
+        </div>
+
+        <!-- Ações Finais -->
+        <div class="results-actions">
+          <button id="playAgainBtn" class="cta-btn primary">
+            <span>JOGAR NOVAMENTE</span>
+            <span>🔄</span>
+          </button>
+          <button id="changeModeBtn" class="cta-btn secondary">
+            <span>MENU PRINCIPAL</span>
+            <span>🏠</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>Dados fornecidos por <strong>Open Trivia DB</strong> & <strong>AnimeChan API</strong> • Feito para fãs de Anime</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
